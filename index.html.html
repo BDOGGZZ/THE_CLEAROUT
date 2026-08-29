@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Clearout — Personal Marketplace</title>
+<meta name="description" content="A personal catalog of things for sale — clothing, electronics, furniture, and more. Browse photos, prices, and condition notes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Tokens ---------- */
+  :root{
+    --paper:#F7F6F2;
+    --paper-dim:#EFEDE5;
+    --card:#FFFFFF;
+    --ink:#16181D;
+    --ink-soft:#52555C;
+    --line:#DDDACF;
+    --accent:#2E5339;
+    --accent-soft:#E1EAE4;
+    --brass:#B8863B;
+    --brass-ink:#7A5A22;
+    --brass-soft:#F3E8D3;
+    --gray-soft:#EAE8E2;
+    --danger:#B3453B;
+    --danger-soft:#F4E3E1;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(22,24,29,.05), 0 10px 24px -16px rgba(22,24,29,.22);
+    --font-display:'Space Grotesk', 'Arial Narrow', sans-serif;
+    --font-body:'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono:'IBM Plex Mono', 'Courier New', monospace;
+  }
+
+  /* ---------- Reset ---------- */
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ background:var(--paper); }
+  @media (prefers-reduced-motion: no-preference){
+    html{ scroll-behavior:smooth; }
+  }
+  body{ margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3,p{ margin:0; }
+  img,svg{ display:block; max-width:100%; }
+  a{ color:inherit; text-decoration:none; }
+  button{ font:inherit; }
+  ::selection{ background:var(--accent); color:var(--paper); }
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:4px; }
+
+  .wrap{ max-width:1180px; margin:0 auto; padding-inline:clamp(20px,5vw,48px); }
+  .eyebrow{ font-family:var(--font-mono); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); font-weight:500; }
+
+  /* ---------- Header ---------- */
+  .site-header{ position:sticky; top:0; z-index:20; background:rgba(247,246,242,.88); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
+  .nav-inner{ display:flex; align-items:center; justify-content:space-between; gap:24px; padding:16px 0; }
+  .brand{ font-family:var(--font-display); font-weight:600; font-size:1.15rem; letter-spacing:-.01em; flex:0 0 auto; }
+  .pills{ min-width:0; }
+  .pills__list{ list-style:none; margin:0; padding:0; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
+  .pills__list::-webkit-scrollbar{ display:none; }
+  .pill{ flex:0 0 auto; font-family:var(--font-body); font-size:.85rem; font-weight:500; padding:7px 14px; border:1px solid var(--line); border-radius:999px; color:var(--ink-soft); white-space:nowrap; transition:all .15s ease; }
+  .pill:hover{ border-color:var(--accent); color:var(--ink); }
+  .pill.is-active{ background:var(--ink); border-color:var(--ink); color:var(--paper); }
+
+  /* ---------- Admin bar ---------- */
+  .admin-bar{ display:none; position:sticky; top:66px; z-index:19; background:var(--ink); color:var(--paper); }
+  html.edit-unlocked .admin-bar{ display:block; }
+  .admin-bar__inner{ display:flex; align-items:center; justify-content:space-between; gap:16px; padding:10px 0; flex-wrap:wrap; }
+  .admin-bar__label{ font-family:var(--font-mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--brass); }
+  .admin-bar__actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .admin-bar .btn--ghost{ border-color:rgba(247,246,242,.3); color:var(--paper); }
+  .admin-bar .btn--ghost:hover{ border-color:var(--paper); color:var(--paper); }
+  .admin-bar .btn--primary{ background:var(--brass); color:var(--ink); }
+  .admin-bar .btn--primary:hover{ background:#CBA05A; }
+
+  /* ---------- Buttons ---------- */
+  .btn{ font-family:var(--font-body); font-weight:500; font-size:.85rem; padding:9px 16px; border-radius:8px; border:1px solid transparent; cursor:pointer; transition:all .15s ease; }
+  .btn--primary{ background:var(--ink); color:var(--paper); }
+  .btn--primary:hover{ background:var(--accent); }
+  .btn--ghost{ background:transparent; border-color:var(--line); color:var(--ink-soft); }
+  .btn--ghost:hover{ border-color:var(--ink); color:var(--ink); }
+  .btn--danger{ background:var(--danger); color:#fff; }
+  .btn--danger:hover{ background:#96382F; }
+  .btn--sm{ padding:6px 12px; font-size:.78rem; }
+
+  /* ---------- Hero ---------- */
+  .hero__row{ display:flex; align-items:flex-start; justify-content:space-between; gap:40px; flex-wrap:wrap; padding:64px 0 56px; }
+  .hero__text{ max-width:620px; }
+  .hero__title{ font-family:var(--font-display); font-weight:700; font-size:clamp(2.5rem,6vw,4.25rem); letter-spacing:-.02em; line-height:1.02; margin:10px 0 18px; }
+  .hero__tagline{ font-size:1.08rem; color:var(--ink-soft); max-width:52ch; }
+
+  .stamp{ flex:0 0 auto; width:108px; height:108px; color:var(--accent); }
+  .stamp__ring{ transform-origin:60px 60px; animation:spin 46s linear infinite; }
+  .stamp__label{ font-family:var(--font-mono); font-size:9px; letter-spacing:2px; fill:currentColor; }
+  .stamp__year{ font-family:var(--font-mono); font-size:13px; font-weight:600; fill:currentColor; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){ .stamp__ring{ animation:none; } }
+
+  /* ---------- Category sections ---------- */
+  .category{ padding:56px 0; scroll-margin-top:130px; }
+  .category:nth-of-type(even){ background:var(--paper-dim); }
+  .category-head{ margin-bottom:28px; }
+  .category-head .eyebrow{ margin-bottom:8px; }
+  .category__title{ font-family:var(--font-display); font-weight:600; font-size:clamp(1.5rem,3vw,2rem); letter-spacing:-.01em; }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:22px; }
+  .empty-note{ font-family:var(--font-mono); font-size:.85rem; color:var(--ink-soft); opacity:.7; padding:12px 0; grid-column:1/-1; }
+
+  /* ---------- Card ---------- */
+  .card{ position:relative; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); transition:transform .18s ease, box-shadow .18s ease; }
+  .card:hover{ transform:translateY(-3px); box-shadow:0 1px 2px rgba(22,24,29,.06), 0 18px 30px -16px rgba(22,24,29,.28); }
+  .card::before{ content:''; position:absolute; top:14px; left:14px; width:10px; height:10px; border-radius:50%; background:var(--paper); border:1.5px solid var(--line); z-index:2; }
+
+  .card__photo{ aspect-ratio:4/3; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; background:repeating-linear-gradient(135deg, var(--paper-dim), var(--paper-dim) 9px, #E9E6DD 9px, #E9E6DD 10px); }
+  .card__icon{ width:42px; height:42px; color:var(--ink-soft); opacity:.55; stroke:currentColor; fill:none; stroke-width:1.5; }
+  .card__photo-label{ font-family:var(--font-mono); font-size:.62rem; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); opacity:.5; }
+
+  .card__body{ padding:16px 16px 18px; border-top:1.5px dashed var(--line); }
+  .card__meta{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .lot{ font-family:var(--font-mono); font-size:.72rem; color:var(--ink-soft); letter-spacing:.03em; }
+
+  .badge{ display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-family:var(--font-mono); font-size:.66rem; letter-spacing:.05em; text-transform:uppercase; font-weight:500; white-space:nowrap; }
+  .badge--new{ background:var(--accent-soft); color:var(--accent); }
+  .badge--good{ background:var(--brass-soft); color:var(--brass-ink); }
+  .badge--fair{ background:var(--gray-soft); color:var(--ink-soft); }
+
+  .card__name{ font-family:var(--font-display); font-weight:600; font-size:1.05rem; letter-spacing:-.005em; margin-bottom:3px; }
+  .card__desc{ font-size:.85rem; color:var(--ink-soft); margin-bottom:14px; }
+  .card__price{ font-family:var(--font-mono); font-weight:600; font-size:1.3rem; }
+
+  .remove-btn{ display:none; position:absolute; top:10px; right:10px; z-index:3; width:26px; height:26px; border-radius:50%; border:1px solid var(--line); background:var(--card); color:var(--ink-soft); font-size:.9rem; line-height:1; cursor:pointer; align-items:center; justify-content:center; padding:0; }
+  .remove-btn:hover{ background:var(--danger-soft); border-color:var(--danger); color:var(--danger); }
+  html.edit-unlocked .remove-btn{ display:flex; }
+
+  /* ---------- Footer ---------- */
+  .site-footer{ padding:64px 0 56px; border-top:1px solid var(--line); }
+  .site-footer .eyebrow{ margin-bottom:10px; }
+  .footer__title{ font-family:var(--font-display); font-weight:600; font-size:clamp(1.5rem,3vw,2rem); margin-bottom:12px; }
+  .footer__body{ color:var(--ink-soft); max-width:56ch; margin-bottom:22px; }
+  .contact{ font-family:var(--font-mono); font-size:1.05rem; font-weight:500; margin-bottom:10px; }
+  .contact span{ color:var(--ink-soft); padding:0 6px; }
+  .fine-print{ font-size:.8rem; color:var(--ink-soft); opacity:.8; }
+  .admin-trigger{ display:inline-block; margin-top:20px; font-family:var(--font-mono); font-size:.72rem; color:var(--ink-soft); opacity:.55; background:none; border:none; text-decoration:underline; cursor:pointer; padding:0; }
+  .admin-trigger:hover{ opacity:1; }
+  html.edit-unlocked .admin-trigger{ display:none; }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{ position:fixed; inset:0; background:rgba(22,24,29,.5); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px; }
+  .modal-overlay[hidden]{ display:none; }
+  .modal{ background:var(--card); border-radius:var(--radius); padding:28px; max-width:420px; width:100%; box-shadow:var(--shadow); }
+  .modal__title{ font-family:var(--font-display); font-size:1.3rem; font-weight:600; margin-bottom:10px; }
+  .modal__note{ font-size:.8rem; color:var(--ink-soft); margin-bottom:16px; }
+  .modal__actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+  .modal__error{ color:var(--danger); font-size:.82rem; margin-top:10px; }
+
+  .field{ display:flex; flex-direction:column; gap:5px; font-size:.82rem; color:var(--ink-soft); margin-bottom:14px; }
+  .field input, .field select{ font-family:var(--font-body); font-size:.95rem; color:var(--ink); padding:9px 11px; border:1px solid var(--line); border-radius:8px; background:var(--paper); width:100%; }
+  .field input:focus, .field select:focus{ outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); }
+  .field-row{ display:flex; gap:12px; }
+  .field-row .field{ flex:1; }
+
+  @media (max-width:640px){
+    .hero__row{ padding:48px 0 40px; gap:24px; }
+    .stamp{ width:84px; height:84px; }
+    .category{ padding:44px 0; }
+    .grid{ gap:16px; }
+    .admin-bar{ top:112px; }
+  }
+</style>
+</head>
+<body>
+
+<svg style="display:none" aria-hidden="true">
+  <symbol id="icon-shirt" viewBox="0 0 24 24">
+    <path d="M12 3a2 2 0 0 1 2 2c0 .8-.5 1.5-1.2 1.8L12 7l-.8-.2A2 2 0 0 1 10 5a2 2 0 0 1 2-2Z"/>
+    <path d="M12 7 3 12.3c-.8.5-.5 1.7.5 1.7H6l6-3.5 6 3.5h2.5c1 0 1.3-1.2.5-1.7L12 7Z"/>
+    <path d="M6 13.8V19a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-5.2"/>
+  </symbol>
+  <symbol id="icon-headphones" viewBox="0 0 24 24">
+    <path d="M4 14v-2a8 8 0 0 1 16 0v2"/>
+    <rect x="2.5" y="14" width="4" height="6.5" rx="1.6"/>
+    <rect x="17.5" y="14" width="4" height="6.5" rx="1.6"/>
+  </symbol>
+  <symbol id="icon-chair" viewBox="0 0 24 24">
+    <path d="M6 4v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V4"/>
+    <path d="M7.2 14v6"/>
+    <path d="M16.8 14v6"/>
+    <path d="M6 8.2h12"/>
+  </symbol>
+  <symbol id="icon-box" viewBox="0 0 24 24">
+    <path d="M3 8 12 4l9 4-9 4-9-4Z"/>
+    <path d="M3 8v9l9 4 9-4V8"/>
+    <path d="M12 12v9"/>
+  </symbol>
+</svg>
+
+<header class="site-header">
+  <div class="wrap nav-inner">
+    <span class="brand">The Clearout</span>
+    <nav class="pills" aria-label="Category navigation">
+      <ul class="pills__list">
+        <li><a class="pill" href="#clothing">Clothing</a></li>
+        <li><a class="pill" href="#electronics">Electronics</a></li>
+        <li><a class="pill" href="#furniture">Furniture</a></li>
+        <li><a class="pill" href="#everything-else">Everything Else</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div id="adminBar" class="admin-bar">
+  <div class="wrap admin-bar__inner">
+    <span class="admin-bar__label">Edit mode</span>
+    <div class="admin-bar__actions">
+      <button type="button" id="openAddForm" class="btn btn--primary btn--sm">Add item</button>
+      <button type="button" id="openContactForm" class="btn btn--ghost btn--sm">Edit contact info</button>
+      <button type="button" id="downloadSite" class="btn btn--ghost btn--sm" title="Save an updated copy of this page to re-upload to your host">Download updated site</button>
+      <button type="button" id="exitEdit" class="btn btn--ghost btn--sm">Exit edit mode</button>
+    </div>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="wrap hero__row">
+    <div class="hero__text">
+      <p class="eyebrow">Catalog · August 2026</p>
+      <h1 class="hero__title">The Clearout</h1>
+      <p class="hero__tagline">I'm making room and selling off things I don't use anymore. Everything below is photographed, priced, and ready to go — take a look and reach out about anything you like.</p>
+    </div>
+    <svg class="stamp" viewBox="0 0 120 120" aria-hidden="true">
+      <g class="stamp__ring">
+        <circle cx="60" cy="60" r="54" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="60" cy="60" r="44" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3 5"/>
+      </g>
+      <text x="60" y="57" text-anchor="middle" class="stamp__label">CATALOG</text>
+      <text x="60" y="74" text-anchor="middle" class="stamp__year">EST. 2026</text>
+    </svg>
+  </div>
+</section>
+
+<main>
+
+  <section id="clothing" class="category">
+    <div class="wrap">
+      <div class="category-head">
+        <p class="eyebrow">Section 01</p>
+        <h2 class="category__title">Clothing &amp; Accessories</h2>
+      </div>
+      <div class="grid" id="grid-clothing"></div>
+    </div>
+  </section>
+
+  <section id="electronics" class="category">
+    <div class="wrap">
+      <div class="category-head">
+        <p class="eyebrow">Section 02</p>
+        <h2 class="category__title">Electronics &amp; Gadgets</h2>
+      </div>
+      <div class="grid" id="grid-electronics"></div>
+    </div>
+  </section>
+
+  <section id="furniture" class="category">
+    <div class="wrap">
+      <div class="category-head">
+        <p class="eyebrow">Section 03</p>
+        <h2 class="category__title">Furniture &amp; Home Goods</h2>
+      </div>
+      <div class="grid" id="grid-furniture"></div>
+    </div>
+  </section>
+
+  <section id="everything-else" class="category">
+    <div class="wrap">
+      <div class="category-head">
+        <p class="eyebrow">Section 04</p>
+        <h2 class="category__title">Everything Else</h2>
+      </div>
+      <div class="grid" id="grid-everything"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p class="eyebrow">Get in touch</p>
+    <h2 class="footer__title">See something you like?</h2>
+    <p class="footer__body">Message me with the item name and lot number, and I'll get back to you with pickup details and payment options.</p>
+    <p class="contact" id="contactDisplay"></p>
+    <p class="fine-print">Local pickup preferred · Cash, Venmo, or PayPal · Prices as listed unless noted otherwise</p>
+    <button type="button" id="adminTrigger" class="admin-trigger">Site owner? Edit this page</button>
+  </div>
+</footer>
+
+<div id="loginModal" class="modal-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <h2 id="loginTitle" class="modal__title">Editor sign-in</h2>
+    <p class="modal__note">Local passphrase only — not secure authentication. Don't use this to protect anything sensitive.</p>
+    <form id="loginForm">
+      <div class="field">
+        <span>Passphrase</span>
+        <input type="password" id="loginPass" autocomplete="off" required>
+      </div>
+      <p id="loginError" class="modal__error" hidden>That's not it — try again.</p>
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" id="loginCancel">Cancel</button>
+        <button type="submit" class="btn btn--primary">Unlock</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="addModal" class="modal-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+    <h2 id="addTitle" class="modal__title">Add an item</h2>
+    <form id="addForm">
+      <div class="field">
+        <span>Category</span>
+        <select id="addCategory" required>
+          <option value="clothing">Clothing &amp; Accessories</option>
+          <option value="electronics">Electronics &amp; Gadgets</option>
+          <option value="furniture">Furniture &amp; Home Goods</option>
+          <option value="everything">Everything Else</option>
+        </select>
+      </div>
+      <div class="field">
+        <span>Name</span>
+        <input type="text" id="addName" maxlength="60" required>
+      </div>
+      <div class="field">
+        <span>Description</span>
+        <input type="text" id="addDesc" maxlength="80">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <span>Price ($)</span>
+          <input type="number" id="addPrice" min="0" step="1" required>
+        </div>
+        <div class="field">
+          <span>Condition</span>
+          <select id="addCondition">
+            <option value="new">Like new</option>
+            <option value="good" selected>Good condition</option>
+            <option value="fair">Fair condition</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" id="addCancel">Cancel</button>
+        <button type="submit" class="btn btn--primary">Add to catalog</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="confirmModal" class="modal-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <h2 id="confirmTitle" class="modal__title">Remove this item?</h2>
+    <p class="modal__note" id="confirmText">This can't be undone.</p>
+    <div class="modal__actions">
+      <button type="button" class="btn btn--ghost" id="confirmCancel">Cancel</button>
+      <button type="button" class="btn btn--danger" id="confirmRemove">Remove</button>
+    </div>
+  </div>
+</div>
+
+<div id="contactModal" class="modal-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
+    <h2 id="contactTitle" class="modal__title">Edit contact info</h2>
+    <form id="contactForm">
+      <div class="field">
+        <span>Email</span>
+        <input type="email" id="contactEmail" maxlength="80" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <span>Phone</span>
+        <input type="text" id="contactPhone" maxlength="40" placeholder="(555) 010-0100">
+      </div>
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" id="contactCancel">Cancel</button>
+        <button type="submit" class="btn btn--primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  var CONDITION_LABELS = { new: 'Like new', good: 'Good condition', fair: 'Fair condition' };
+  var CONDITION_CLASS = { new: 'badge--new', good: 'badge--good', fair: 'badge--fair' };
+  var CATEGORY_META = {
+    clothing: { icon: 'icon-shirt', grid: 'grid-clothing' },
+    electronics: { icon: 'icon-headphones', grid: 'grid-electronics' },
+    furniture: { icon: 'icon-chair', grid: 'grid-furniture' },
+    everything: { icon: 'icon-box', grid: 'grid-everything' }
+  };
+
+  var DEFAULT_ITEMS = /*ITEMS_START*/[
+    {"id":1,"lot":1,"category":"clothing","name":"Leather Jacket","desc":"Brown leather, size M","price":85,"condition":"good"},
+    {"id":2,"lot":2,"category":"clothing","name":"Wool Peacoat","desc":"Navy, size L","price":60,"condition":"new"},
+    {"id":3,"lot":3,"category":"clothing","name":"Canvas Tote Set","desc":"Set of 3, natural canvas","price":18,"condition":"new"},
+    {"id":4,"lot":4,"category":"clothing","name":"Trail Running Shoes","desc":"Size 10, light wear","price":35,"condition":"good"},
+    {"id":5,"lot":5,"category":"clothing","name":"Silk Scarf Collection","desc":"Set of 4, mixed patterns","price":22,"condition":"new"},
+    {"id":6,"lot":6,"category":"clothing","name":"Leather Belt","desc":"Brown, 34 in","price":15,"condition":"good"},
+    {"id":7,"lot":7,"category":"electronics","name":"Instant Print Camera","desc":"Includes one film pack","price":40,"condition":"new"},
+    {"id":8,"lot":8,"category":"electronics","name":"Portable Bluetooth Speaker","desc":"Waterproof, w/ charger","price":25,"condition":"good"},
+    {"id":9,"lot":9,"category":"electronics","name":"Mechanical Keyboard","desc":"Hot-swappable switches","price":55,"condition":"new"},
+    {"id":10,"lot":10,"category":"electronics","name":"10-inch Tablet","desc":"64GB, Wi-Fi, w/ case","price":110,"condition":"good"},
+    {"id":11,"lot":11,"category":"electronics","name":"Wireless Earbuds","desc":"With charging case","price":30,"condition":"good"},
+    {"id":12,"lot":12,"category":"electronics","name":"Retro Turntable","desc":"Belt-drive, built-in speaker","price":75,"condition":"fair"},
+    {"id":13,"lot":13,"category":"furniture","name":"Mid-Century Armchair","desc":"Reupholstered seat cushion","price":150,"condition":"good"},
+    {"id":14,"lot":14,"category":"furniture","name":"Oak Bookshelf","desc":"5-tier, solid wood","price":90,"condition":"good"},
+    {"id":15,"lot":15,"category":"furniture","name":"Brass Table Lamp","desc":"Linen shade","price":28,"condition":"new"},
+    {"id":16,"lot":16,"category":"furniture","name":"Woven Area Rug","desc":"5 x 7 ft","price":65,"condition":"good"},
+    {"id":17,"lot":17,"category":"furniture","name":"Ceramic Dinnerware Set","desc":"Service for 4, 16 pieces","price":45,"condition":"new"},
+    {"id":18,"lot":18,"category":"furniture","name":"Adjustable Standing Desk","desc":"Electric lift, oak top","price":120,"condition":"good"},
+    {"id":19,"lot":19,"category":"everything","name":"Board Game Collection","desc":"8 titles included","price":35,"condition":"good"},
+    {"id":20,"lot":20,"category":"everything","name":"Cast Iron Skillet Set","desc":"3 sizes, seasoned","price":32,"condition":"new"},
+    {"id":21,"lot":21,"category":"everything","name":"Hybrid Bicycle","desc":"20-inch frame, new tires","price":95,"condition":"fair"},
+    {"id":22,"lot":22,"category":"everything","name":"Framed Wall Art","desc":"Set of 3 prints","price":40,"condition":"new"},
+    {"id":23,"lot":23,"category":"everything","name":"Yoga Mat & Blocks","desc":"Mat, 2 blocks, strap","price":20,"condition":"good"},
+    {"id":24,"lot":24,"category":"everything","name":"4-Person Camping Tent","desc":"Easy-pitch frame","price":55,"condition":"good"}
+  ]/*ITEMS_END*/;
+
+  var DEFAULT_CONTACT = /*CONTACT_START*/{"email":"youremail@example.com","phone":"(555) 010-0100"}/*CONTACT_END*/;
+
+  // Local passphrase only — NOT real security. Anyone who views this page's
+  // source, or opens browser dev tools, can read this value or just run the
+  // unlock code directly, bypassing it. It deters casual clicking, nothing
+  // more. Change it to whatever you like.
+  var ADMIN_PASSPHRASE = 'changeme';
+
+  var STORAGE_KEY = 'clearout_items_v1';
+  var CONTACT_STORAGE_KEY = 'clearout_contact_v1';
+
+  function loadItems() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return DEFAULT_ITEMS.slice();
+  }
+
+  function saveItems() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ITEMS)); } catch (e) {}
+  }
+
+  function loadContact() {
+    try {
+      var raw = localStorage.getItem(CONTACT_STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return { email: DEFAULT_CONTACT.email, phone: DEFAULT_CONTACT.phone };
+  }
+
+  function saveContact() {
+    try { localStorage.setItem(CONTACT_STORAGE_KEY, JSON.stringify(CONTACT)); } catch (e) {}
+  }
+
+  var ITEMS = loadItems();
+  var CONTACT = loadContact();
+
+  function escapeHTML(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function cardHTML(item) {
+    var meta = CATEGORY_META[item.category];
+    if (!meta) return '';
+    var lotStr = 'No. ' + String(item.lot).padStart(3, '0');
+    var descHTML = item.desc ? '<p class="card__desc">' + escapeHTML(item.desc) + '</p>' : '';
+    return '<article class="card">' +
+      '<button type="button" class="remove-btn" data-id="' + item.id + '" aria-label="Remove ' + escapeHTML(item.name) + '">&times;</button>' +
+      '<div class="card__photo"><svg class="card__icon"><use href="#' + meta.icon + '"></use></svg><span class="card__photo-label">Photo</span></div>' +
+      '<div class="card__body">' +
+      '<div class="card__meta"><span class="lot">' + lotStr + '</span><span class="badge ' + CONDITION_CLASS[item.condition] + '">' + CONDITION_LABELS[item.condition] + '</span></div>' +
+      '<h3 class="card__name">' + escapeHTML(item.name) + '</h3>' +
+      descHTML +
+      '<p class="card__price">$' + item.price + '</p>' +
+      '</div></article>';
+  }
+
+  function render() {
+    var byCat = { clothing: [], electronics: [], furniture: [], everything: [] };
+    ITEMS.forEach(function (it) { if (byCat[it.category]) byCat[it.category].push(it); });
+    Object.keys(CATEGORY_META).forEach(function (cat) {
+      var el = document.getElementById(CATEGORY_META[cat].grid);
+      if (!el) return;
+      var list = byCat[cat];
+      el.innerHTML = list.length ? list.map(cardHTML).join('') : '<p class="empty-note">No items here right now.</p>';
+    });
+  }
+
+  function renderContact() {
+    var el = document.getElementById('contactDisplay');
+    if (!el) return;
+    var parts = [];
+    if (CONTACT.email) parts.push(escapeHTML(CONTACT.email));
+    if (CONTACT.phone) parts.push(escapeHTML(CONTACT.phone));
+    el.innerHTML = parts.join('<span>&middot;</span>');
+  }
+
+  function showModal(m) { m.hidden = false; }
+  function hideModal(m) { m.hidden = true; }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    render();
+    renderContact();
+
+    var htmlEl = document.documentElement;
+    var loginModal = document.getElementById('loginModal');
+    var addModal = document.getElementById('addModal');
+    var confirmModal = document.getElementById('confirmModal');
+    var confirmText = document.getElementById('confirmText');
+    var contactModal = document.getElementById('contactModal');
+    var contactForm = document.getElementById('contactForm');
+    var contactEmailInput = document.getElementById('contactEmail');
+    var contactPhoneInput = document.getElementById('contactPhone');
+    var pendingRemoveId = null;
+    var loginForm = document.getElementById('loginForm');
+    var loginPass = document.getElementById('loginPass');
+    var loginError = document.getElementById('loginError');
+    var addForm = document.getElementById('addForm');
+
+    document.getElementById('adminTrigger').addEventListener('click', function () {
+      showModal(loginModal);
+      loginPass.focus();
+    });
+    document.getElementById('loginCancel').addEventListener('click', function () { hideModal(loginModal); });
+    loginForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (loginPass.value === ADMIN_PASSPHRASE) {
+        htmlEl.classList.add('edit-unlocked');
+        hideModal(loginModal);
+        loginForm.reset();
+        loginError.hidden = true;
+      } else {
+        loginError.hidden = false;
+      }
+    });
+
+    document.getElementById('exitEdit').addEventListener('click', function () {
+      htmlEl.classList.remove('edit-unlocked');
+    });
+
+    document.getElementById('openAddForm').addEventListener('click', function () {
+      showModal(addModal);
+      document.getElementById('addName').focus();
+    });
+    document.getElementById('addCancel').addEventListener('click', function () { hideModal(addModal); });
+    addForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = document.getElementById('addName').value.trim();
+      var price = parseFloat(document.getElementById('addPrice').value);
+      if (!name || isNaN(price)) return;
+      var nextLot = ITEMS.reduce(function (m, i) { return Math.max(m, i.lot); }, 0) + 1;
+      ITEMS.push({
+        id: Date.now(),
+        lot: nextLot,
+        category: document.getElementById('addCategory').value,
+        name: name,
+        desc: document.getElementById('addDesc').value.trim(),
+        price: price,
+        condition: document.getElementById('addCondition').value
+      });
+      saveItems();
+      render();
+      addForm.reset();
+      hideModal(addModal);
+    });
+
+    document.getElementById('openContactForm').addEventListener('click', function () {
+      contactEmailInput.value = CONTACT.email || '';
+      contactPhoneInput.value = CONTACT.phone || '';
+      showModal(contactModal);
+      contactEmailInput.focus();
+    });
+    document.getElementById('contactCancel').addEventListener('click', function () { hideModal(contactModal); });
+    contactForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      CONTACT = {
+        email: contactEmailInput.value.trim(),
+        phone: contactPhoneInput.value.trim()
+      };
+      saveContact();
+      renderContact();
+      hideModal(contactModal);
+    });
+
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.remove-btn');
+      if (!btn) return;
+      var id = Number(btn.getAttribute('data-id'));
+      var item = ITEMS.find(function (i) { return i.id === id; });
+      if (!item) return;
+      pendingRemoveId = id;
+      confirmText.textContent = 'Remove "' + item.name + '" from the catalog? This can\'t be undone.';
+      showModal(confirmModal);
+    });
+
+    document.getElementById('confirmCancel').addEventListener('click', function () {
+      pendingRemoveId = null;
+      hideModal(confirmModal);
+    });
+
+    document.getElementById('confirmRemove').addEventListener('click', function () {
+      if (pendingRemoveId === null) return;
+      ITEMS = ITEMS.filter(function (i) { return i.id !== pendingRemoveId; });
+      saveItems();
+      render();
+      pendingRemoveId = null;
+      hideModal(confirmModal);
+    });
+
+    document.getElementById('downloadSite').addEventListener('click', function () {
+      var clone = document.documentElement.cloneNode(true);
+      clone.classList.remove('edit-unlocked');
+      var newHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
+      newHtml = newHtml.replace(/\/\*ITEMS_START\*\/[\s\S]*?\/\*ITEMS_END\*\//, '/*ITEMS_START*/' + JSON.stringify(ITEMS) + '/*ITEMS_END*/');
+      newHtml = newHtml.replace(/\/\*CONTACT_START\*\/[\s\S]*?\/\*CONTACT_END\*\//, '/*CONTACT_START*/' + JSON.stringify(CONTACT) + '/*CONTACT_END*/');
+      var blob = new Blob([newHtml], { type: 'text/html' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'the-clearout.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    [loginModal, addModal, confirmModal, contactModal].forEach(function (overlay) {
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) hideModal(overlay);
+      });
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { hideModal(loginModal); hideModal(addModal); hideModal(confirmModal); hideModal(contactModal); }
+    });
+
+    var sections = document.querySelectorAll('.category');
+    var pills = document.querySelectorAll('.pill');
+    var map = {};
+    pills.forEach(function (p) { map[p.getAttribute('href').slice(1)] = p; });
+    if ('IntersectionObserver' in window) {
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          var pill = map[entry.target.id];
+          if (!pill) return;
+          if (entry.isIntersecting) {
+            pills.forEach(function (p) { p.classList.remove('is-active'); });
+            pill.classList.add('is-active');
+          }
+        });
+      }, { rootMargin: '-40% 0px -50% 0px', threshold: 0 });
+      sections.forEach(function (s) { observer.observe(s); });
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
